@@ -1,0 +1,147 @@
+<html lang="en"><head>
+<meta charset="UTF-8">
+<link rel="apple-touch-icon" type="image/png" href="https://kbppassignment1.s3.us-east-1.amazonaws.com/logo.png">
+<meta name="apple-mobile-web-app-title" content="CodePen">
+<link rel="shortcut icon" type="image/x-icon" href="https://kbppassignment1.s3.us-east-1.amazonaws.com/logo.png">
+<link rel="mask-icon" type="" href="https://kbppassignment1.s3.us-east-1.amazonaws.com/logo.png" color="#111">
+<title>CodePen - Bot UI</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+<style>
+@import url(https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700);
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+body, html {
+  height: 100%;
+}
+
+body {
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 115%;
+  display: -webkit-box;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+          flex-direction: column;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.chat-output {
+  -webkit-box-flex: 1;
+          flex: 1;
+  padding: 20px;
+  display: -webkit-box;
+  display: flex;
+  background: white;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+          flex-direction: column;
+}
+.chat-output > div {
+  margin: 0 0 20px 0;
+}
+.chat-output .user-message .message {
+  background: #0FB0DF;
+  color: white;
+}
+.chat-output .bot-message {
+  text-align: right;
+}
+.chat-output .bot-message .message {
+  background: #eee;
+}
+.chat-output .message {
+  display: inline-block;
+  padding: 12px 20px;
+  border-radius: 10px;
+}
+
+.chat-input {
+  padding: 20px;
+  background: #eee;
+  border: 1px solid #ccc;
+  border-bottom: 0;
+}
+.chat-input .user-input {
+  width: 100%;
+  font-size: 2rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 8px;
+}
+</style>
+<script>
+  window.console = window.console || function(t) {};
+</script>
+<script>
+  if (document.location.search.match(/type=embed/gi)) {
+    window.parent.postMessage("resize", "*");
+  }
+</script>
+</head>
+<body translate="no">
+<div class="chat-output" id="chat-output">
+<div class="user-message">
+<div class="message">Hi! I'm a bot. What's up?</div>
+</div>
+
+    <div class="bot-message">
+      <div class="message">
+        Hi
+      </div>
+    </div>
+  
+      <div class="user-message">
+        <div class="message">
+          I'm like 20 lines of JavaScript I can't actually talk to you.
+        </div>
+      </div>
+    </div>
+<div class="chat-input">
+<form action="#0" id="user-input-form">
+<input type="text" id="user-input" class="user-input" placeholder="Talk to the bot.">
+</form>
+</div>
+<script src="https://static.codepen.io/assets/common/stopExecutionOnTimeout-db44b196776521ea816683afab021f757616c80860d31da6232dedb8d7cc4862.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+<script id="rendered-js">
+var outputArea = $("#chat-output");
+
+$("#user-input-form").on("submit", function (e) {
+
+  e.preventDefault();
+
+  var message = $("#user-input").val();
+
+  outputArea.append(`
+    <div class='bot-message'>
+      <div class='message'>
+        ${message}
+      </div>
+    </div>
+  `);
+
+  setTimeout(function () {
+    outputArea.append(`
+      <div class='user-message'>
+        <div class='message'>
+          I'm like 20 lines of JavaScript I can't actually talk to you.
+        </div>
+      </div>
+    `);
+  }, 250);
+
+  $("#user-input").val("");
+
+});
+//# sourceURL=pen.js
+    </script>
+
+
+</body></html>
