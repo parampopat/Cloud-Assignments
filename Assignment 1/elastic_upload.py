@@ -1,6 +1,6 @@
 import boto3
 import json
-import requests
+import os
 
 
 def dynamo_elastic_sync():
@@ -13,7 +13,6 @@ def dynamo_elastic_sync():
 
     # Init Clients
     dynamodb = boto3.resource('dynamodb', region_name="us-east-1")
-    elastic = boto3.client('es', region_name="us-east-1")
     table = dynamodb.Table('yelp-restaurants')
     subset_keys = ['id', 'cuisine']
     file_name = 'yelp_data_v2.json'
@@ -31,7 +30,7 @@ def dynamo_elastic_sync():
                 response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
 
             # Load Data into Elastic Search
-            doc_record = {"create": {"_index": "Restaurants", "_type": "_doc", "_id": "%d"}}
+            doc_record = {"index": {"_index": "Restaurants", "_type": "_doc", "_id": "%d"}}
             for record in response["Items"]:
                 subset_data = {k: record[k] for k in subset_keys}
                 this_doc_record = (json.dumps(doc_record) + "\n") % doc_id
@@ -45,15 +44,10 @@ def dynamo_elastic_sync():
                 break
 
     print("Done writing to file")
-    # Bulk Load it to elastic index
-    # curl -XPOST elasticsearch_domain_endpoint/_bulk --data-binary @bulk_movies.json -H 'Content-Type: application/json'
-
-    #### DOES NOT WORK YET ##########
     es_url = 'https://search-restaurants-eiskklpby24f4jvruokmxlbwba.us-east-1.es.amazonaws.com/_bulk'
-    files = {'file': (file_name, open(file_name, 'rb'), 'application/json')}
-    requests.post(es_url, files=files)
-
-    print("Done uploading to Elastic Search Index")
+    cmd = 'curl -XPOST %s --data-binary @%s -H "Content-Type: application/json"' % (es_url, file_name)
+    resp = os.system(cmd)
+    print("Done uploading to Elastic Search Index with res: ", resp)
 
 
 if __name__ == '__main__':
