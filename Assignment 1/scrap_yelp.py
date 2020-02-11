@@ -1,6 +1,6 @@
 """
 __author__ = "Param Popat"
-__version__ = "1.0"
+__version__ = "1.1"
 __git__ = "https://github.com/parampopat/"
 """
 import requests
@@ -10,7 +10,7 @@ import time
 
 def get_data(term, location, limit=50, offset=0):
     URL = "https://api.yelp.com/v3/businesses/search"
-    api_key = 'YUw0TfMSp0qlExEg-rn93f5AJTXSTO8g2WU6moogqXX1IUXBlNu-70G1VovWXTRA7j8K3CXBVh2VBapKzu-NyoIOtHu5HkyLuDf7Wjt3eJXUITn1bYUBmPHo6PI9XnYx'
+    api_key = 'api-key'
     headers = {
         'Authorization': 'Bearer %s' % api_key,
     }
