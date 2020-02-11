@@ -30,7 +30,7 @@ def dynamo_elastic_sync():
                 response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
 
             # Load Data into Elastic Search
-            doc_record = {"index": {"_index": "Restaurants", "_type": "_doc", "_id": "%d"}}
+            doc_record = {"index": {"_index": "restaurants", "_type": "_doc", "_id": "%d"}}
             for record in response["Items"]:
                 subset_data = {k: record[k] for k in subset_keys}
                 this_doc_record = (json.dumps(doc_record) + "\n") % doc_id
