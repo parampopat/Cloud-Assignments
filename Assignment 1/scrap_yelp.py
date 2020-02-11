@@ -41,18 +41,28 @@ def scrap_yelp(max_offset, cuisine, location):
             businesses = get_business(data)
             for iter in range(len(businesses)):
                 businesses[iter]['cuisine'] = cuisine
-                businesses['insertedAtTimestamp'] = time.time()
+                businesses[iter]['insertedAtTimestamp'] = str(time.time())
                 bus.append(businesses[iter])
-            print(str(i + 50) + " Done")
         except:
-            print("Final Tally for ", keyword, " is ", len(bus))
-            break
-        print("Final Tally for ", keyword, " is ", len(bus))
+            continue
+    print("Final Tally for ", keyword, " is ", len(bus))
+    return bus
 
 
-max_offset = 1000
-cuisines = ["chinese", "italian", "indian", "japanese", "thai", "mexican"]
-location = 'Manhattan'
-
-dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
-table = dynamodb.Table('yelp-restaurants')
+if __name__ == '__main__':
+    max_offset = 1000
+    # cuisines = ["chinese", "italian", "indian"]
+    cuisines = ["japanese", "thai", "mexican"]
+    location = 'Manhattan'
+    dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+    table = dynamodb.Table('yelp-restaurants')
+    for cuisine in cuisines:
+        businesses = scrap_yelp(max_offset=max_offset, cuisine=cuisine, location=location)
+        with table.batch_writer(overwrite_by_pkeys=['insertedAtTimestamp']) as batch:
+            for item in businesses:
+                for key in item.keys():
+                    item[key] = ' ' if item[key] == '' else str(item[key])
+                try:
+                    batch.put_item(Item=item)
+                except:
+                    continue
