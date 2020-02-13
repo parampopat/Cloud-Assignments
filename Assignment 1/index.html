@@ -6,6 +6,17 @@
 <link rel="mask-icon" type="" href="https://kbppassignment1.s3.us-east-1.amazonaws.com/logo.png" color="#111">
 <title>CodePen - Bot UI</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+    <script type="text/javascript" src="lib/axios/dist/axios.standalone.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/rollups/hmac-sha256.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/rollups/sha256.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/components/hmac.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/components/enc-base64.js"></script>
+    <script type="text/javascript" src="lib/url-template/url-template.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/sigV4Client.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/apiGatewayClient.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/simpleHttpClient.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/utils.js"></script>
+    <script type="text/javascript" src="apigClient.js"></script>
 <style>
 @import url(https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700);
 * {
@@ -87,46 +98,60 @@ body {
 </head>
 <body translate="no">
 <div class="chat-output" id="chat-output">
-<div class="user-message">
-<div class="message">Hi! I'm a bot. What's up?</div>
+	<div class="user-message">
+		<div class="message">Hi! I'm your personal concierge. What's up?</div>
+	</div>
+</div>
+<div class="chat-input">
+	<form action="#0" id="user-input-form">
+		<input type="text" id="user-input" class="user-input" placeholder="Talk to the bot.">
+	</form>
 </div>
 
-    <div class="bot-message">
-      <div class="message">
-        Hi
-      </div>
-    </div>
-  
-      <div class="user-message">
-        <div class="message">
-          I'm like 20 lines of JavaScript I can't actually talk to you.
-        </div>
-      </div>
-    </div>
-<div class="chat-input">
-<form action="#0" id="user-input-form">
-<input type="text" id="user-input" class="user-input" placeholder="Talk to the bot.">
-</form>
-</div>
 <script src="https://static.codepen.io/assets/common/stopExecutionOnTimeout-db44b196776521ea816683afab021f757616c80860d31da6232dedb8d7cc4862.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
 <script id="rendered-js">
 var outputArea = $("#chat-output");
+
+var apigClient = apigClientFactory.newClient({
+    accessKey: '***REMOVED***',
+    secretKey: '***REMOVED***',
+});
 
 $("#user-input-form").on("submit", function (e) {
 
   e.preventDefault();
 
   var message = $("#user-input").val();
-
+  var params = {
+	};
+  var additionalParams = {
+	};
+  var body = {
+		"message" : $("#user-input").val()
+	};
   outputArea.append(`
     <div class='bot-message'>
       <div class='message'>
-        ${message}
+        ${body["message"]}
       </div>
     </div>
   `);
-
+  
+  $("#user-input").val("");
+  
+  apigClient.chatbotPost(params, body, additionalParams)
+    .then( function(result){
+	var body2 = JSON.parse(result.data.body)
+	outputArea.append(`
+      <div class='user-message'>
+        <div class='message'>
+          ${body2}
+        </div>
+      </div>
+    `);
+	
+    }).catch( function(result){
   setTimeout(function () {
     outputArea.append(`
       <div class='user-message'>
@@ -135,8 +160,12 @@ $("#user-input-form").on("submit", function (e) {
         </div>
       </div>
     `);
-  }, 250);
-
+  }, 250)
+    });
+	
+	
+  
+	
   $("#user-input").val("");
 
 });
