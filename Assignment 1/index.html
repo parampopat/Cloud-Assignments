@@ -81,10 +81,24 @@ body {
 }
 .chat-input .user-input {
   width: 100%;
-  font-size: 2rem;
+  font-size: 150%;
   border: 1px solid #ccc;
   border-radius: 4px;
   padding: 8px;
+}
+
+.button {
+  background-color: #0FB0DF; /* Green */
+  width: 100%;
+  border: none;
+  color: white;
+  padding: 10px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 8px;
 }
 </style>
 <script>
@@ -106,6 +120,7 @@ body {
 	<form action="#0" id="user-input-form">
 		<input type="text" id="user-input" class="user-input" placeholder="Talk to the bot.">
 	</form>
+	<button class="button" type="submit" form="user-input-form" value="submit">Send</button>
 </div>
 
 <script src="https://static.codepen.io/assets/common/stopExecutionOnTimeout-db44b196776521ea816683afab021f757616c80860d31da6232dedb8d7cc4862.js"></script>
