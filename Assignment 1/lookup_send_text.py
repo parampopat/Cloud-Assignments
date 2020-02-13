@@ -2,7 +2,7 @@ import json
 import boto3
 from random import randint
 from boto3.dynamodb.conditions import Key
-import requests
+from botocore.vendored import requests
 
 
 def elastic_get_id(req):
@@ -34,7 +34,7 @@ def get_restaurant_details(req, rest_id, table):
         IndexName='id-index',
         KeyConditionExpression=Key('id').eq(rest_id),
         FilterExpression="cuisine = :thiscus",
-        ExpressionAttributeValues={":thiscus": req['cuisine']}
+        ExpressionAttributeValues={":thiscus": req['cuisine'].lower()}
     )
 
     response = response['Items'][0]
@@ -44,18 +44,14 @@ def get_restaurant_details(req, rest_id, table):
         'rating': response['rating']
     }
 
-    sms = """Here is your reccomendation!
-    {name}
-    Address: {address}
-    Rating: {rating}
-    """
+    sms = """Here is your reccomendation!\n{name}\nAddress: {address}\nRating: {rating}"""
 
     formatted = sms.format(**details_dict)
 
     return formatted
 
 
-def process_request(req, table, sns):
+def process_request(req, table, sns, sqs, queue_url, receipt_handle):
     # Read Elastic Search for Random Restaurant Id
     restaurant_id = elastic_get_id(req)
 
@@ -69,6 +65,7 @@ def process_request(req, table, sns):
     )
 
     # if Success, delete the message!
+    sqs.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle)
 
 
 def lambda_handler(event, context):
@@ -77,13 +74,21 @@ def lambda_handler(event, context):
     dynamodb = boto3.resource('dynamodb', region_name="us-east-1")
     table = dynamodb.Table('yelp-restaurants')
     sns = boto3.client('sns')
+    queue_url = 'https://sqs.us-east-1.amazonaws.com/041132386971/restbotsms'
 
-    requests = sqs.receive_message(
-        QueueUrl='https://sqs.us-east-1.amazonaws.com/041132386971/restbotsms'
-    )['Messages']
+    messages = sqs.receive_message(
+        QueueUrl=queue_url
+    )
+    messages = messages.get('Messages', None)
+    if messages is None:
+        return {
+            'statusCode': 200,
+            'body': json.dumps('Found no Messages')
+        }
 
-    for request in requests:
-        process_request(eval(request), table, sns)
+    for msg in messages:
+        receipt_handle = msg['ReceiptHandle']
+        process_request(eval(msg['Body']), table, sns, sqs, queue_url, receipt_handle)
 
     # TODO implement
     return {
