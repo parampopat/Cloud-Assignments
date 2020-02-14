@@ -50,7 +50,7 @@ body {
   padding: 20px;
   display: -webkit-box;
   display: flex;
-  background: white;
+  background: #f4faec;
   border-top-left-radius: 50px;
   border-top-right-radius: 50px;
   overflow-y: auto;
@@ -62,8 +62,8 @@ body {
   margin: 0 0 20px 0;
 }
 .chat-output .user-message .message {
-  background: #8cbb53;
-  color: white;
+  background: #DB5639 ;
+  color: #f4faec;
 }
 .chat-output .bot-message {
   text-align: right;
@@ -79,7 +79,7 @@ body {
 
 .chat-input {
   padding: 20px;
-  background: white;
+  background: #f4faec;
   border-bottom: 0;
   border-bottom-left-radius: 50px;
   border-bottom-right-radius: 50px;
@@ -93,10 +93,10 @@ body {
 }
 
 .button {
-  background-color: #8cbb53; /* Green */
+  background-color: #DB5639; /* Green */
   width: 100%;
   border: none;
-  color: white;
+  color: #f4faec;
   padding: 10px;
   text-align: center;
   text-decoration: none;
@@ -127,7 +127,10 @@ body {
 	<form action="#0" id="user-input-form">
 		<input type="text" id="user-input" class="user-input" placeholder="Type Here!!">
 	</form>
-	<button class="button" type="submit" form="user-input-form" value="submit">Send</button>
+	<button class="button" type="submit" form="user-input-form" value="submit"><img src = "logo.png" height="40" alt = "Send"/>
+	Send
+	<img src = "logo.png" height="40" alt = "Send"/>
+	</button>
 </div>
 
 <script src="https://static.codepen.io/assets/common/stopExecutionOnTimeout-db44b196776521ea816683afab021f757616c80860d31da6232dedb8d7cc4862.js"></script>
@@ -175,7 +178,7 @@ $("#user-input-form").on("submit", function (e) {
     outputArea.append(`
       <div class='user-message'>
         <div class='message'>
-          I'm like 20 lines of JavaScript I can't actually talk to you.
+          Sorry, my AI isn't quite capable to understand that yet.
         </div>
       </div>
     `);
