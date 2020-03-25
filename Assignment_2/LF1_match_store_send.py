@@ -3,8 +3,8 @@ from boto3.dynamodb.conditions import Key
 from random import sample
 import json
 
-VIRTUAL_DOOR_URL = "www.google.com"
-GRANT_PAGE_BASE = ""
+VIRTUAL_DOOR_URL = "http://virtualdoorotp.s3-website-us-east-1.amazonaws.com"
+GRANT_PAGE_BASE = "http://virtualdoorgrant.s3-website-us-east-1.amazonaws.com"
 
 
 class Authenticator:
