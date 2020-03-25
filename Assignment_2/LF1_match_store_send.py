@@ -3,7 +3,8 @@ from boto3.dynamodb.conditions import Key
 from random import sample
 import json
 
-ACCESS_WEB_URL = "www.google.com"
+VIRTUAL_DOOR_URL = "www.google.com"
+GRANT_PAGE_BASE = ""
 
 
 class Authenticator:
@@ -33,7 +34,7 @@ class Authenticator:
 
     def match_face(self):
         response = self.table_visitors.query(
-            IndexName='faceid-index',
+            IndexName='faceId-index',
             KeyConditionExpression=Key('faceId').eq(self.face_id),
         )
 
@@ -64,15 +65,21 @@ class Authenticator:
             self.store_otp()
 
             # TODO: Replace 'visitor' with name on File. Assumes OTP succeeded.
-            msg = "Hello {}! Your OTP to open the virtual door is {}. Expiry in 5 min".format('visitor', self.otp)
+            msg = (
+                    'Hello {}! Your OTP to open the virtual door is {}.' +
+                    'Expiry in 5 min' +
+                    'Click link to enter virtual door.{}'
+            ).format(self.visitor_name, self.otp, VIRTUAL_DOOR_URL)
+
             self.client_sns.publish(PhoneNumber=self.visitor_phone, Message=msg)
         else:
+            grant_page_url = "{}?face_id={}".format(GRANT_PAGE_BASE, self.face_id)
             html = (
                 """
                 A new visitor has requested access to your apartment.
                 Grant Access by clicking <a href="{}">here</a>
                 <img src="{}" alt="headshot">
-                """.format(ACCESS_WEB_URL, self.visitor_image_link)
+                """.format(grant_page_url, self.visitor_image_link)
             )
             self.client_email.send_email(
                 Source="smartdoorauth@incredible.com",
@@ -102,10 +109,7 @@ class Authenticator:
             batch.put_item(Item=item)
 
     def is_otp_valid(self):
-        response = self.table_passcodes.query(
-            # IndexName='faceid-index',
-            KeyConditionExpression=Key('code').eq(self.otp),
-        )
+        response = self.table_passcodes.query(KeyConditionExpression=Key('code').eq(self.otp))
 
         frontend_data = {
             'is_otp_valid': False,
@@ -135,13 +139,22 @@ def lambda_handler(event, context):
         auth.get_face_id()
         auth.match_face()
         auth.send_key_or_request()
-    elif process == "owner authorizes":
+    elif process == "owner approve":
         auth.face_id = event['face_id']
         auth.visitor_name = event['visitor_name']
         auth.visitor_phone = event['visitor_phone']
         auth.store_visitor_details()
         auth.is_face_match = True  # We dont need to lookup the table we just inserted the record
         auth.send_key_or_request()
+
+        msg = {
+            'success': True,
+            'error': ""
+        }
+        return {
+            'statusCode': 200,
+            'body': json.dumps(msg)
+        }
     elif process == "authorize visitor":
         auth.otp = event['otp']
         auth_response = auth.is_otp_valid()
@@ -150,4 +163,4 @@ def lambda_handler(event, context):
             'body': json.dumps(auth_response)
         }
     else:
-        raise ValueError( "Dont know how to process '{}'".format(process))
+        raise ValueError("Dont know how to process '{}'".format(process))
