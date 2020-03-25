@@ -9,7 +9,7 @@ ACCESS_WEB_URL = "www.google.com"
 class Authenticator:
     def __init__(self):
         # Clients
-        self.client_ddb = boto3.resource('dynamodb', region_name="us-east-1")
+        self.client_ddb = boto3.resource('dynamodb', region_name="us-east-2")
         self.table_passcodes = self.client_ddb.Table('passcodes')
         self.table_visitors = self.client_ddb.Table('visitors')
         self.client_sns = boto3.client('sns')
@@ -104,22 +104,31 @@ class Authenticator:
     def is_otp_valid(self):
         response = self.table_passcodes.query(
             # IndexName='faceid-index',
-            KeyConditionExpression=Key('visitorid').eq(self.face_id),
+            KeyConditionExpression=Key('code').eq(self.otp),
         )
 
-        valid = False
+        frontend_data = {
+            'is_otp_valid': False,
+            'visitor_name': "Unknown"
+        }
         if len(response['Items']) > 0:
-            details = response['Items'][0]
-            if details['code'] == self.otp:
-                valid = True
+            frontend_data['is_otp_valid'] = True
+            face_id = response['Items'][0]['visitorid']
 
-        return valid
+            # Query for Name
+            visitor_det = self.table_visitors.query(
+                IndexName='faceId-index',
+                KeyConditionExpression=Key('faceId').eq(face_id),
+            )
+            frontend_data['visitor_name'] = visitor_det['Items'][0]['name']
+
+        return frontend_data
 
 
 def lambda_handler(event, context):
     # Kinesis Stream Object
     # TODO: Detect process from caller
-    process = ""
+    process = event['process']
     auth = Authenticator()
 
     if process == "kinesis event":
@@ -135,8 +144,10 @@ def lambda_handler(event, context):
         auth.send_key_or_request()
     elif process == "authorize visitor":
         auth.otp = event['otp']
-        is_otp_valid = auth.is_otp_valid()
+        auth_response = auth.is_otp_valid()
         return {
             'statusCode': 200,
-            'body': json.dumps(is_otp_valid)
+            'body': json.dumps(auth_response)
         }
+    else:
+        raise ValueError( "Dont know how to process '{}'".format(process))

@@ -1,0 +1,178 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Virtual Door</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+    <script type="text/javascript" src="lib/axios/dist/axios.standalone.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/rollups/hmac-sha256.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/rollups/sha256.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/components/hmac.js"></script>
+    <script type="text/javascript" src="lib/CryptoJS/components/enc-base64.js"></script>
+    <script type="text/javascript" src="lib/url-template/url-template.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/sigV4Client.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/apiGatewayClient.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/simpleHttpClient.js"></script>
+    <script type="text/javascript" src="lib/apiGatewayCore/utils.js"></script>
+    <script type="text/javascript" src="otp_validate_apigClient.js"></script>
+    <style>
+        .chat-output {
+            -webkit-box-flex: 1;
+            flex: 1;
+            padding: 20px;
+            display: -webkit-box;
+            display: flex;
+            background: #f4faec;
+            border-top-left-radius: 50px;
+            border-top-right-radius: 50px;
+            overflow-y: auto;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            flex-direction: column;
+        }
+
+        .chat-output > div {
+            margin: 0 0 20px 0;
+        }
+
+        .chat-output .user-message .message {
+            background: #DB5639;
+            color: #f4faec;
+        }
+
+        .chat-output .bot-message {
+            text-align: center;
+        }
+
+        .chat-output .bot-message .message {
+            background: #eee;
+        }
+
+        .chat-output .message {
+            display: inline-block;
+            padding: 12px 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .chat-input {
+            padding: 20px;
+            background: #f4faec;
+            border-bottom: 0;
+            border-bottom-left-radius: 50px;
+            border-bottom-right-radius: 50px;
+        }
+
+        .header {
+            font-size: 200%;
+            background: #f4faec;
+            text-align: center;
+        }
+
+        .chat-input .user-input {
+            width: 100%;
+            font-size: 100%;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            padding: 8px;
+        }
+
+        .chat-input label {
+            display: block;
+            margin: 0px 0px 15px 0px;
+        }
+
+        .chat-input label > span {
+            width: 100px;
+            font-weight: bold;
+            float: left;
+            padding-top: 8px;
+            padding-right: 5px;
+        }
+
+        .button {
+            background-color: #DB5639; /* Green */
+            width: 100%;
+            border: none;
+            color: #f4faec;
+            padding: 10px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 150%;
+            cursor: pointer;
+            border-radius: 20px;
+        }
+    </style>
+    <script>
+        window.console = window.console || function (t) {
+        };
+    </script>
+    <script>
+        if (document.location.search.match(/type=embed/gi)) {
+            window.parent.postMessage("resize", "*");
+        }
+    </script>
+</head>
+
+<body>
+<div class="header">
+    <span id="myheader">Virtual Door</span>
+</div>
+<div class="chat-input">
+    <form action="#0" id="user-input-form">
+        <label class="field1"><span>Enter OTP</span>
+            <input type="text" id="user-input" class="user-input" placeholder="Enter 4 digit OTP here">
+        </label>
+    </form>
+    <button class="button" type="submit" form="user-input-form" value="submit">Submit</button>
+</div>
+<div class="chat-output">
+    <div class="message" id="auth-response"></div>
+</div>
+
+<script src="https://static.codepen.io/assets/common/stopExecutionOnTimeout-db44b196776521ea816683afab021f757616c80860d31da6232dedb8d7cc4862.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+<script id="rendered-js">
+    var apigClient = apigClientFactory.newClient();
+    var auth_response = ""
+
+    $("#user-input-form").on("submit", function (e) {
+        e.preventDefault();
+
+        var otp = $("#user-input").val();
+        var params = {};
+        var additionalParams = {};
+        var body = {}
+        body['otp'] = otp;
+        body['process'] = 'authorize visitor'
+
+        $("#user-input").val("");
+
+        apigClient.validatePost(params, body, additionalParams)
+            .then(function (result) {
+                var resp = JSON.parse(result.data.body)
+
+                if (resp['is_otp_valid']) {
+                    auth_response = "Success! Welcome " + resp['visitor_name'] + ". You have been granted access"
+                } else {
+                    auth_response = "Incorrect OTP. Access not granted"
+                }
+
+            }).catch(function (result) {
+            setTimeout(function () {
+                auth_response = "Error occurred while validating OTP"
+            }, 250)
+        });
+
+        $("#user-input").val("");
+
+    })
+
+    window.setInterval(function () {
+        var elem = document.getElementById('auth-response');
+        elem.innerText = auth_response;
+    }, 10);
+</script>
+</body>
+</html>
+
