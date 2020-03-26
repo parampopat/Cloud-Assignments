@@ -2,6 +2,7 @@ import boto3
 from boto3.dynamodb.conditions import Key
 from random import sample
 import json
+import time
 
 VIRTUAL_DOOR_URL = "http://virtualdoorotp.s3-website-us-east-1.amazonaws.com"
 GRANT_PAGE_BASE = "http://virtualdoorgrant.s3-website-us-east-1.amazonaws.com"
@@ -20,7 +21,7 @@ class Authenticator:
         self.face_id = None
         self.visitor_phone = None
         self.visitor_name = None
-        self.owner_email = None
+        self.owner_email = "saykartik@gmail.com"
         self.visitor_image_link = "https://upload.wikimedia.org/wikipedia/en/e/ed/Nyan_cat_250px_frame.PNG"
 
         self.is_face_match = None
@@ -56,7 +57,8 @@ class Authenticator:
         # TODO: Should we make sure there is only one active OTP by flushing previous ?
         with self.table_passcodes.batch_writer() as batch:
             # TODO: visitorid might change - keep track
-            item = {'code': self.otp, 'visitorid': self.face_id}
+            exp_time = int(time.time()) + 5 * 60  # Expiry in 5 mins
+            item = {'code': self.otp, 'visitorid': self.face_id, 'ttl': exp_time}
             batch.put_item(Item=item)
 
     def send_key_or_request(self):
@@ -64,7 +66,6 @@ class Authenticator:
             self.generate_otp()
             self.store_otp()
 
-            # TODO: Replace 'visitor' with name on File. Assumes OTP succeeded.
             msg = (
                     'Hello {}! Your OTP to open the virtual door is {}.' +
                     'Expiry in 5 min' +
@@ -77,12 +78,12 @@ class Authenticator:
             html = (
                 """
                 A new visitor has requested access to your apartment.
-                Grant Access by clicking <a href="{}">here</a>
+                Grant Access by clicking <a href="{}">here</a><br>
                 <img src="{}" alt="headshot">
                 """.format(grant_page_url, self.visitor_image_link)
             )
             self.client_email.send_email(
-                Source="smartdoorauth@incredible.com",
+                Source="saykartik@gmail.com",
                 Destination={'ToAddresses': [self.owner_email]},
                 Message={
                     'Subject': {
@@ -103,21 +104,25 @@ class Authenticator:
 
     def store_visitor_details(self):
         with self.table_visitors.batch_writer() as batch:
-            # TODO: visitorid might change - keep track
             # TODO: What should you do with Photos here ? Confused...
             item = {'faceId': self.face_id, 'name': self.visitor_name, 'phoneNumber': self.visitor_phone}
             batch.put_item(Item=item)
 
     def is_otp_valid(self):
         response = self.table_passcodes.query(KeyConditionExpression=Key('code').eq(self.otp))
+        response = response['Items']
+        curr_time = int(time.time())
+
+        # Filter out expired items because SLA for deletion is 48 hrs.
+        response = [item for item in response if item.get('ttl', int('inf')) > curr_time]
 
         frontend_data = {
             'is_otp_valid': False,
             'visitor_name': "Unknown"
         }
-        if len(response['Items']) > 0:
+        if len(response) > 0:
             frontend_data['is_otp_valid'] = True
-            face_id = response['Items'][0]['visitorid']
+            face_id = response[0]['visitorid']
 
             # Query for Name
             visitor_det = self.table_visitors.query(
@@ -131,7 +136,7 @@ class Authenticator:
 
 def lambda_handler(event, context):
     # Kinesis Stream Object
-    # TODO: Detect process from caller
+    # TODO: Detect process from caller for Kinesis.
     process = event['process']
     auth = Authenticator()
 
