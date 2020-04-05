@@ -96,9 +96,24 @@ def start_stream(stream_name):
     print(response)
 
 
-def main(set_collection=False, add=False, generate_stream=False, stream=False):
+def stop_stream(stream_name):
     """
 
+    :param stream_name:
+    :return:
+    """
+    client = boto3.client('rekognition')
+    print('Stopping Stream Processor:' + stream_name)
+    response = client.stop_stream_processor(
+        Name=stream_name
+    )
+    print(response)
+
+
+def main(set_collection=False, add=False, generate_stream=False, stream=False, stop=False):
+    """
+
+    :param stop:
     :param set_collection:
     :param add:
     :param generate_stream:
@@ -129,9 +144,17 @@ def main(set_collection=False, add=False, generate_stream=False, stream=False):
             stream = create_stream(kvs=kvs_arn, kds=kds_arn, user=user_arn, collection_id=collection_id,
                                    stream_name=stream_name)
         except Exception as e:
-            print("Couldn't Creat Stream", e)
+            print("Couldn't Create Stream", e)
     if stream:
-        start_stream(stream_name=stream_name)
+        try:
+            start_stream(stream_name=stream_name)
+        except Exception as e:
+            print("Couldn't Start Stream", e)
+    if stop:
+        try:
+            stop_stream(stream_name=stream_name)
+        except Exception as e:
+            print("Couldn't Stop Stream", e)
 
 
 if __name__ == "__main__":
