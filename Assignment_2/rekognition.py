@@ -6,6 +6,7 @@ __reference__ = "https://boto3.amazonaws.com/v1/documentation/api/latest/index.h
 """
 
 import boto3
+import time
 
 
 def create_collection(collection_id):
@@ -159,3 +160,89 @@ def main(set_collection=False, add=False, generate_stream=False, stream=False, s
 
 if __name__ == "__main__":
     main(stream=True)
+
+    # hls_stream_ARN = 'arn:aws:kinesisvideo:us-east-1:041132386971:stream/kbppstream/1586054873891'
+    #
+    # STREAM_NAME = "kbppstream"
+    # kvs = boto3.client("kinesisvideo")
+    #
+    # # Grab the endpoint from GetDataEndpoint
+    # endpoint = kvs.get_data_endpoint(
+    #     APIName="GET_HLS_STREAMING_SESSION_URL",
+    #     StreamARN=hls_stream_ARN)['DataEndpoint']
+    #
+    # # Grab the HLS Stream URL from the endpoint
+    # kvam = boto3.client("kinesis-video-archived-media", endpoint_url=endpoint)
+    # url = kvam.get_hls_streaming_session_url(
+    #     StreamName=STREAM_NAME,
+    #     PlaybackMode="LIVE")['HLSStreamingSessionURL']
+    # kvs = boto3.client("kinesisvideo")
+    #
+    # # Now try getting video chunks using GetMedia
+    #
+    # response = kvs.get_data_endpoint(
+    #     StreamARN=hls_stream_ARN,
+    #     APIName='GET_MEDIA'
+    # )
+    # endpoint_url_string = response['DataEndpoint']
+    #
+    # streaming_client = boto3.client(
+    #     'kinesis-video-media',
+    #     endpoint_url=endpoint_url_string,
+    #     # region_name='us-east-1'
+    # )
+    #
+    # kinesis_stream = streaming_client.get_media(
+    #     StreamARN=hls_stream_ARN,
+    #     StartSelector={'StartSelectorType': 'EARLIEST'}
+    #     # StartSelector={'StartSelectorType': 'NOW'}
+    #
+    # )
+    #
+    # stream_payload = kinesis_stream['Payload']
+    #
+    # print("Received stream payload.")
+
+    # f = open("fragments_2.mkv", 'w+b')
+    # f.write(stream_payload.read())
+    # f.close()
+    # print("Saved to a file.")
+
+    # client = boto3.client('kinesis-video-media')
+    # response = client.get_media(
+    #     StreamName='kbppstream',
+    #     StreamARN='arn:aws:kinesisvideo:us-east-1:041132386971:stream/kbppstream/1586054873891',
+    #     StartSelector={
+    #         'StartSelectorType': 'NOW',
+    #     }
+    # )
+    #
+    # stream = response['Payload']  # botocore.response.StreamingBody object
+    # chunk = stream.read(1024)
+    # while chunk is not None:
+    #     chunk = stream.read(1024)
+
+    # bucket = 'ppkbvisitorvault'
+    # fileName = 'vap.jpg'
+    # threshold = 70
+    # client = boto3.client('rekognition')
+    # response = client.search_faces_by_image(CollectionId='Collection',
+    #                                         Image={'S3Object': {'Bucket': 'ppkbvisitorvault', 'Name': fileName}},
+    #                                         FaceMatchThreshold=threshold,
+    #                                         MaxFaces=1)
+    #
+    # faceMatches = response['FaceMatches']
+    # if len(faceMatches) > 0:
+    #     faceId = faceMatches[0]['Face']['FaceId']
+    #     print('faceid', faceId)
+    #
+    # bucket = 'ppkbvisitorvault'
+    # fileName = 'DSC04796.JPG'
+    # response = client.index_faces(CollectionId='Collection',
+    #                               Image={'S3Object': {'Bucket': bucket, 'Name': fileName}},
+    #                               ExternalImageId=fileName,
+    #                               MaxFaces=1,
+    #                               QualityFilter="AUTO",
+    #                               DetectionAttributes=['ALL'])
+    # for faceRecord in response['FaceRecords']:
+    #     print('  Face ID: ' + faceRecord['Face']['FaceId'])
