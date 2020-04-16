@@ -134,9 +134,17 @@ class Authenticator:
             raise ValueError("The Url should have been written to Dynamo. Its not found. Booooo..")
 
         # Take image from URL and trasnfer it to the new bucket
-
-        # Transfer image to new bucket
-        # set visitor image link to the updated bucket
+		name = url.split('/')[-1]
+		source = url.split('/')[-2] 
+		s3 = boto3.resource('s3')
+		copy_source = {
+			'Bucket': source,
+			'Key': name
+			}
+		s3.meta.client.copy(copy_source, bucket, name)
+		url = 's3://' + bucket + '/' + name
+        self.visitor_image_link = url
+		
 
     def match_face(self):
         response = self.table_visitors.query(
