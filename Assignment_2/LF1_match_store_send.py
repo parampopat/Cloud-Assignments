@@ -35,7 +35,7 @@ class Authenticator:
         self.table_visitors = self.client_ddb.Table('visitors')
         self.table_emails = self.client_ddb.Table('emails')
         self.client_sns = boto3.client('sns')
-        self.client_email = boto3.client('ses')
+        self.client_email = boto3.client('ses', region_name="us-east-1")
         self.client_rek = boto3.client('rekognition')
         self.s3_client = boto3.client('s3')
 
@@ -98,10 +98,17 @@ class Authenticator:
 
         name = ''.join(sample("0123456789", 6))
         f = open('/tmp/stream.mkv', 'wb')
-        streamBody = kvs_stream['Payload'].read(
-            1024 * 16384)  # reads min(16MB of payload, payload size) - can tweak this
+        streamBody = kvs_stream['Payload'].read(1024 * 16384)  # reads min(16MB of payload, payload size) - can tweak this
         f.write(streamBody)
         f.close()
+        
+        # s3_client = boto3.client('s3', region_name='us-east-1')
+        
+        # s3_client.upload_file(
+        #     '/tmp/stream.mkv',
+        #     bucket,  # replace with your bucket name
+        #     'stream_3.mkv'
+        # )
 
         # use openCV to get a frame
         cap = cv2.VideoCapture('/tmp/stream.mkv')
@@ -117,7 +124,8 @@ class Authenticator:
         )
         cap.release()
         print('Image uploaded')
-        url = 's3://' + bucket + '/' + name + '.jpg'
+        # url = 's3://' + bucket + '/' + name + '.jpg'
+        url = 'https://'+bucket+'.s3.amazonaws.com/'+name+'.jpg'
         self.visitor_image_link = url
         return name + '.jpg'
 
@@ -129,20 +137,20 @@ class Authenticator:
 
         if len(response) == 1:
             response = response[0]
-            url = response.get('url')
+            url = response.get('temp_url')
         else:
             raise ValueError("The Url should have been written to Dynamo. Its not found. Booooo..")
 
         # Take image from URL and trasnfer it to the new bucket
         name = url.split('/')[-1]
-        source = url.split('/')[-2]
+        source = url.split('/')[-2].split('.')[0]
         s3 = boto3.resource('s3')
         copy_source = {
             'Bucket': source,
             'Key': name
         }
         s3.meta.client.copy(copy_source, bucket, name)
-        url = 's3://' + bucket + '/' + name
+        url = 'https://'+bucket+'.s3.amazonaws.com/'+ name
         self.visitor_image_link = url
 
     def match_face(self):
@@ -196,7 +204,7 @@ class Authenticator:
             )
             response = response['Items']
             curr_time = int(time.time())
-            response = [item for item in response if item.get('ttl', int('inf')) > curr_time]
+            response = [item for item in response if item.get('ttl', float('inf')) > curr_time]
             in_process = len(response) > 0
         else:
             # Check if email is sent
@@ -205,7 +213,7 @@ class Authenticator:
             )
             response = response['Items']
             curr_time = int(time.time())
-            response = [item for item in response if item.get('ttl', int('inf')) > curr_time]
+            response = [item for item in response if item.get('ttl', float('inf')) > curr_time]
             in_process = len(response) > 0
 
         if not in_process:
@@ -222,7 +230,7 @@ class Authenticator:
                 self.client_sns.publish(PhoneNumber=self.visitor_phone, Message=msg)
             else:
                 self.store_email_and_url()
-
+                print('I Tried Sending EMail')
                 grant_page_url = "{}?face_id={}".format(GRANT_PAGE_BASE, self.face_id)
                 html = (
                     """
@@ -248,6 +256,8 @@ class Authenticator:
                         }
                     }
                 )
+        else:
+            print('Email Already Sent')
 
     def generate_otp(self):
         self.otp = ''.join(sample("0123456789", 4))  # A Very simple Random OTP generator
@@ -264,7 +274,7 @@ class Authenticator:
         curr_time = int(time.time())
 
         # Filter out expired items because SLA for deletion is 48 hrs.
-        response = [item for item in response if item.get('ttl', int('inf')) > curr_time]
+        response = [item for item in response if item.get('ttl', float('inf')) > curr_time]
 
         frontend_data = {
             'is_otp_valid': False,
@@ -303,8 +313,6 @@ def lambda_handler(event, context):
             faceid = auth.gen_face_id(temp_bucket, filename)
             auth.set_face_id(faceid)
             # Update Dynamo With TempURL
-            auth.update_store_url()
-
             auth.match_face()
             auth.send_key_or_request()
             # Once we have number and name, update URL and Trasnfer photo to main bucket
@@ -312,7 +320,7 @@ def lambda_handler(event, context):
             # Detected face
             faceid = matches[0]['MatchedFaces'][0]['Face']['FaceId']
             print(faceid)
-
+            _ = auth.save_image_v2(temp_bucket)
             # Send OTP? But verify if we have number
             auth.set_face_id(faceid)
             auth.match_face()
