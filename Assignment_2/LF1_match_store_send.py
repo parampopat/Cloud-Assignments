@@ -61,9 +61,11 @@ class Authenticator:
         faceMatches = response['FaceMatches']
         if len(faceMatches) > 0:
             self.face_id = faceMatches[0]['Face']['FaceId']
+            return self.face_id
             # print(self.face_id)
         else:
             self.face_id = self.gen_face_id(bucket=bucket, fileName=fileName)
+            return self.face_id
             # print(self.face_id)
 
     def gen_face_id(self, bucket=None, fileName=None):
@@ -132,6 +134,7 @@ class Authenticator:
     def transfer_image(self, bucket):
         response = self.table_emails.query(
             KeyConditionExpression=Key('faceId').eq(self.face_id),
+            ConsistentRead=True
         )
         response = response['Items']
 
@@ -210,6 +213,7 @@ class Authenticator:
             # Check if email is sent
             response = self.table_emails.query(
                 KeyConditionExpression=Key('faceId').eq(self.face_id),
+                ConsistentRead=True
             )
             response = response['Items']
             curr_time = int(time.time())
@@ -269,7 +273,7 @@ class Authenticator:
             batch.put_item(Item=item)
 
     def is_otp_valid(self):
-        response = self.table_passcodes.query(KeyConditionExpression=Key('code').eq(self.otp))
+        response = self.table_passcodes.query(KeyConditionExpression=Key('code').eq(self.otp), ConsistentRead=True)
         response = response['Items']
         curr_time = int(time.time())
 
@@ -310,7 +314,7 @@ def lambda_handler(event, context):
             print('0')
             # Do Something about saving and generating face id
             filename = auth.save_image_v2(temp_bucket)
-            faceid = auth.gen_face_id(temp_bucket, filename)
+            faceid = auth.get_face_id(temp_bucket, filename)
             auth.set_face_id(faceid)
             # Update Dynamo With TempURL
             auth.match_face()
