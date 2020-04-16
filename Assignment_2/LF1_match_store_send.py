@@ -85,65 +85,8 @@ class Authenticator:
         self.face_id = faceid
         
         
-    def save_image(self):
-        # make sure to use the right ARN here:
-        hls_stream_ARN = "arn:aws:kinesisvideo:us-west-2:420343293343:stream/MyStream/1563421665582"
         
-        STREAM_NAME = "MyStream"
-        kvs = boto3.client("kinesisvideo")
-
-        # Grab the endpoint from GetDataEndpoint
-        endpoint = kvs.get_data_endpoint(
-            APIName="GET_HLS_STREAMING_SESSION_URL",
-            StreamARN=hls_stream_ARN)['DataEndpoint']
-            
-        # Grab the HLS Stream URL from the endpoint
-        kvam = boto3.client("kinesis-video-archived-media", endpoint_url=endpoint)
-        url = kvam.get_hls_streaming_session_url(
-            StreamName=STREAM_NAME,
-            PlaybackMode="LIVE")['HLSStreamingSessionURL']
-        kvs = boto3.client("kinesisvideo")
-
-        # Now try getting video chunks using GetMedia
-        
-        response = kvs.get_data_endpoint(
-            StreamARN=hls_stream_ARN,
-            APIName='GET_MEDIA'
-        )
-        endpoint_url_string = response['DataEndpoint']
-        
-        streaming_client = boto3.client(
-        	'kinesis-video-media', 
-        	endpoint_url=endpoint_url_string, 
-        	#region_name='us-east-1'
-        )
-        
-        kinesis_stream = streaming_client.get_media(
-        	StreamARN=hls_stream_ARN,
-        # 	StartSelector={'StartSelectorType': 'EARLIEST'}
-        	StartSelector={'StartSelectorType': 'NOW'}
-        
-        )
-        
-        stream_payload = kinesis_stream['Payload']
-
-        f = open("fragments.mkv", 'w+b')
-        f.write(stream_payload.read())
-        f.close() 
-        print("Saved to a file.")
-        
-        
-        vidcap = cv2.VideoCapture('fragments.mkv')
-        success,image = vidcap.read()
-        cv2.imwrite("iframe.jpg", image)
-        
-        response = self.s3_client.upload_file('iframe0.jpg', 'ppkbvisitorvault', 'iframe0.jpg')
-        
-        vidcap.release()
-        # TODO
-        
-        
-    def save_image_v2(self): 
+    def save_image_v2(self, bucket=None): 
         kvs_client = boto3.client('kinesisvideo', region_name='us-east-1')
         kvs_data_pt = kvs_client.get_data_endpoint(
             StreamARN="arn:aws:kinesisvideo:us-east-1:041132386971:stream/kbppstream/1586054873891", # kinesis stream arn
@@ -156,7 +99,7 @@ class Authenticator:
             StartSelector={'StartSelectorType': 'NOW'} # to keep getting latest available chunk on the stream
         )
 
-        name = 'frame1'
+        name = ''.join(sample("0123456789", 6))
         f = open('/tmp/stream.mkv', 'wb')
         streamBody = kvs_stream['Payload'].read(1024*16384) # reads min(16MB of payload, payload size) - can tweak this
         f.write(streamBody)
@@ -171,13 +114,20 @@ class Authenticator:
         s3_client = boto3.client('s3', region_name='us-east-1')
         s3_client.upload_file(
               '/tmp/'+ name +'.jpg',
-              'ppkbvisitorvault', # replace with your bucket name
+              bucket, # replace with your bucket name
               name + '.jpg'
         )
         cap.release()
         print('Image uploaded')
-        url = 's3://ppkbvisitorvault/'+ name + '.jpg'
-        return url
+        url = 's3://'+bucket+'/'+ name + '.jpg'
+        self.visitor_image_link = url
+        return name + '.jpg'
+        
+        
+        
+    def transfer_image(url, bucket):
+        # Take image from URL and trasnfer it to the new bucket
+        # set visitor image link to the updated bucket
         
         
         
@@ -213,7 +163,9 @@ class Authenticator:
             item = {'code': self.otp, 'visitorid': self.face_id, 'ttl': exp_time}
             batch.put_item(Item=item)
 
+
     def send_key_or_request(self):
+        # TODO Add to dynamo the timestamp with faceid to avoid epeated mails
         if self.is_face_match:
             self.generate_otp()
             self.store_otp()
@@ -289,34 +241,35 @@ class Authenticator:
 def lambda_handler(event, context):
     # Kinesis Stream Object
     # TODO: Detect process from caller for Kinesis.
-
+    auth = Authenticator()
     if event.get('process') is None:
         record = event['Records'][0]
-        auth = Authenticator()
         payload = base64.b64decode(record['kinesis']['data'])
         matches = json.loads(payload)['FaceSearchResponse']
         bucket='ppkbvisitorvault'
-        fileName='frame1.jpg'
+        temp_bucket = 'tempvisitorvault'
         
         if not matches:
             print('0')
             # Do Something about saving and generating face id
-            # auth.save_image_v2()
-            # auth.match_face()
-            # auth.send_key_or_request()
+            filename = auth.save_image_v2(temp_bucket)
+            faceid = auth.gen_face_id(temp_bucket, filename)
+            auth.set_face_id(faceid)
+            # Update Dynamo With TempURL
+            auth.match_face()
+            auth.send_key_or_request()
+            # Once we have number and name, update URL and Trasnfer photo to main bucket
         else:
             # Detected face
             faceid = matches[0]['MatchedFaces'][0]['Face']['FaceId']
             print(faceid)
             
             # Send OTP? But verify if we have number
-            auth.set_face_id(faceid) 
+            auth.set_face_id(faceid)
             auth.match_face()
-            # auth.send_key_or_request()
-            
-        # auth.save_image_v2()
-        # auth.match_face()
-        # auth.send_key_or_request()
+            auth.send_key_or_request()
+
+
         msg = {
             'success': True,
             'error': ""
@@ -326,10 +279,13 @@ def lambda_handler(event, context):
             'body': json.dumps(msg)
         }
     elif process == "owner approve":
+        # query using faceid to get url
         auth.face_id = event['face_id']
         auth.visitor_name = event['visitor_name']
         auth.visitor_phone = event['visitor_phone']
         auth.store_visitor_details()
+        # transfer photo to main bucket
+        auth.transfer_image(url, bucket) # Here set visitor link to new url
         auth.is_face_match = True  # We dont need to lookup the table we just inserted the record
         auth.send_key_or_request()
      
