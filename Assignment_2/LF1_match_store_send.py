@@ -53,9 +53,6 @@ class Authenticator:
         self.kinesis_face = None
 
     def get_face_id(self, bucket=None, fileName=None):
-        # self.face_id = "kbhy6534"  # Data from Stream passed into this function
-        bucket='ppkbvisitorvault'
-        fileName='frame1.jpg'
         threshold = 70
         response=self.client_rek.search_faces_by_image(CollectionId=self.collectionId,
                                 Image={'S3Object':{'Bucket':bucket,'Name':fileName}},
@@ -66,14 +63,13 @@ class Authenticator:
         faceMatches=response['FaceMatches']
         if len(faceMatches) > 0:
             self.face_id = faceMatches[0]['Face']['FaceId']
-            print(self.face_id)
+            # print(self.face_id)
         else:
             self.face_id = self.gen_face_id(bucket=bucket, fileName=fileName)
-            print(self.face_id)
+            # print(self.face_id)
         
     
     def gen_face_id(self, bucket=None, fileName=None):
-        bucket='ppkbvisitorvault'
         response = self.client_rek.index_faces(CollectionId=self.collectionId,
                                   Image={'S3Object': {'Bucket': bucket, 'Name': fileName}},
                                   ExternalImageId=fileName,
@@ -83,6 +79,10 @@ class Authenticator:
         for faceRecord in response['FaceRecords']:
             # print(faceRecord['Face']['FaceId'])
             return faceRecord['Face']['FaceId']
+        
+    
+    def set_face_id(self, faceid):
+        self.face_id = faceid
         
         
     def save_image(self):
@@ -149,43 +149,35 @@ class Authenticator:
             StreamARN="arn:aws:kinesisvideo:us-east-1:041132386971:stream/kbppstream/1586054873891", # kinesis stream arn
             APIName='GET_MEDIA')
 
-        print(kvs_data_pt)
-
         end_pt = kvs_data_pt['DataEndpoint']
         kvs_video_client = boto3.client('kinesis-video-media', endpoint_url=end_pt, region_name='us-east-1') # provide your region
         kvs_stream = kvs_video_client.get_media(
             StreamARN="arn:aws:kinesisvideo:us-east-1:041132386971:stream/kbppstream/1586054873891", # kinesis stream arn
             StartSelector={'StartSelectorType': 'NOW'} # to keep getting latest available chunk on the stream
         )
-        print(kvs_stream)
 
-        # with open('/tmp/stream.mkv', 'wb') as f:
+        name = 'frame1'
         f = open('/tmp/stream.mkv', 'wb')
         streamBody = kvs_stream['Payload'].read(1024*16384) # reads min(16MB of payload, payload size) - can tweak this
         f.write(streamBody)
         f.close()
-        
-        # s3_client = boto3.client('s3', region_name='us-east-1')
-        # s3_client.upload_file(
-        #       '/tmp/stream.mkv',
-        #       'ppkbvisitorvault', # replace with your bucket name
-        #       'stream1.mkv'
-        # )
         
         # use openCV to get a frame
         cap = cv2.VideoCapture('/tmp/stream.mkv')
 
         # use some logic to ensure the frame being read has the person, something like bounding box or median'th frame of the video etc
         ret, frame = cap.read() 
-        cv2.imwrite('/tmp/frame.jpg', frame)
+        cv2.imwrite('/tmp/'+ name +'.jpg', frame)
         s3_client = boto3.client('s3', region_name='us-east-1')
         s3_client.upload_file(
-              '/tmp/frame.jpg',
+              '/tmp/'+ name +'.jpg',
               'ppkbvisitorvault', # replace with your bucket name
-              'frame1.jpg'
+              name + '.jpg'
         )
         cap.release()
         print('Image uploaded')
+        url = 's3://ppkbvisitorvault/'+ name + '.jpg'
+        return url
         
         
         
@@ -303,16 +295,26 @@ def lambda_handler(event, context):
         auth = Authenticator()
         payload = base64.b64decode(record['kinesis']['data'])
         matches = json.loads(payload)['FaceSearchResponse']
+        bucket='ppkbvisitorvault'
+        fileName='frame1.jpg'
         
         if not matches:
             print('0')
-            # Do Something
+            # Do Something about saving and generating face id
+            # auth.save_image_v2()
+            # auth.match_face()
+            # auth.send_key_or_request()
         else:
             # Detected face
-            print(matches[0]['MatchedFaces'][0]['Face']['FaceId'])
-        auth.get_face_id()
+            faceid = matches[0]['MatchedFaces'][0]['Face']['FaceId']
+            print(faceid)
+            
+            # Send OTP? But verify if we have number
+            auth.set_face_id(faceid) 
+            auth.match_face()
+            # auth.send_key_or_request()
+            
         # auth.save_image_v2()
-        
         # auth.match_face()
         # auth.send_key_or_request()
         msg = {
