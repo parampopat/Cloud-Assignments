@@ -129,7 +129,7 @@ class Authenticator:
 
         if len(response) == 1:
             response = response[0]
-            url = response.get('url')
+            url = response.get('temp_url')
         else:
             raise ValueError("The Url should have been written to Dynamo. Its not found. Booooo..")
 
