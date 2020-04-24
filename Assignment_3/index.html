@@ -1,197 +1,246 @@
-<html lang="en"><head>
-<meta charset="UTF-8">
-<link rel="apple-touch-icon" type="image/png" href="https://kbppassignment1.s3.us-east-1.amazonaws.com/logo.png">
-<meta name="apple-mobile-web-app-title" content="CodePen">
-<link rel="shortcut icon" type="image/x-icon" href="https://kbppassignment1.s3.us-east-1.amazonaws.com/logo.png">
-<link rel="mask-icon" type="" href="https://kbppassignment1.s3.us-east-1.amazonaws.com/logo.png" color="#111">
-<title>CodePen - Bot UI</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
-<style>
-@import url(https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700);
-* {
-  box-sizing: border-box;
-}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="apple-touch-icon" type="image/png" href="https://kbppassignment1.s3.us-east-1.amazonaws.com/logo.png">
+    <meta name="apple-mobile-web-app-title" content="CodePen">
+    <link rel="shortcut icon" type="image/x-icon" href="https://kbppassignment1.s3.us-east-1.amazonaws.com/logo.png">
+    <link rel="mask-icon" type="" href="https://kbppassignment1.s3.us-east-1.amazonaws.com/logo.png" color="#111">
+    <title>CodePen - Bot UI</title>
+	<link rel="stylesheet" href="lex_audio/example/style.css">
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">-->
+    <style>
+        @import url(https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700);
 
-html {
-  background-image: url('background.jpg');
-}
+        * {
+            box-sizing: border-box;
+        }
 
-body, html {
-  height: 100%;
-}
+        html {
+            background-image: url('background.jpg');
+        }
 
-body {
-  font-family: 'Source Sans Pro', sans-serif;
-  font-size: 200%;
-  display: -webkit-box;
-  display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-          flex-direction: column;
-  max-width: 700px;
-  margin: 0 auto;
-  border-radius: 8px;
-}
+        body, html {
+            height: 100%;
+        }
 
-.chat-output {
-  -webkit-box-flex: 1;
-          flex: 1;
-  padding: 20px;
-  display: -webkit-box;
-  display: flex;
-  background: #f4faec;
-  border-top-left-radius: 50px;
-  border-top-right-radius: 50px;
-  overflow-y: auto;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-          flex-direction: column;
-}
-.chat-output > div {
-  margin: 0 0 20px 0;
-}
-.chat-output .user-message .message {
-  background: #DB5639 ;
-  color: #f4faec;
-}
-.chat-output .bot-message {
-  text-align: right;
-}
-.chat-output .bot-message .message {
-  background: #eee;
-}
-.chat-output .message {
-  display: inline-block;
-  padding: 12px 20px;
-  border-radius: 10px;
-}
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+            font-size: 200%;
+            display: -webkit-box;
+            display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            flex-direction: column;
+            max-width: 700px;
+            margin: 0 auto;
+            border-radius: 8px;
+        }
 
-.chat-input {
-  padding: 20px;
-  background: #f4faec;
-  border-bottom: 0;
-  border-bottom-left-radius: 50px;
-  border-bottom-right-radius: 50px;
-  border-top-left-radius: 50px;
-  border-top-right-radius: 50px;
-}
-.chat-input .user-input {
-  width: 100%;
-  font-size: 150%;
-  border: 1px solid #ccc;
-  border-radius: 20px;
-  padding: 8px;
-}
+        .chat-output {
+            -webkit-box-flex: 1;
+            flex: 1;
+            padding: 20px;
+            display: -webkit-box;
+            display: flex;
+            background: #f4faec;
+            border-top-left-radius: 50px;
+            border-top-right-radius: 50px;
+            overflow-y: auto;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            flex-direction: column;
+        }
 
-.button {
-  background-color: #DB5639; /* Green */
-  width: 100%;
-  border: none;
-  color: #f4faec;
-  padding: 10px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 150%;
-  cursor: pointer;
-  border-radius: 20px;
-}
-</style>
-<script>
-  window.console = window.console || function(t) {};
-</script>
-<script>
-  if (document.location.search.match(/type=embed/gi)) {
-    window.parent.postMessage("resize", "*");
-  }
-</script>
+        .chat-output > div {
+            margin: 0 0 20px 0;
+        }
+
+        .chat-output .user-message .message {
+            background: #DB5639;
+            color: #f4faec;
+        }
+
+        .chat-output .bot-message {
+            text-align: right;
+        }
+
+        .chat-output .bot-message .message {
+            background: #eee;
+        }
+
+        .chat-output .message {
+            display: inline-block;
+            padding: 12px 20px;
+            border-radius: 10px;
+        }
+
+        .chat-input {
+            padding: 20px;
+            background: #f4faec;
+            border-bottom: 0;
+            border-bottom-left-radius: 50px;
+            border-bottom-right-radius: 50px;
+            border-top-left-radius: 50px;
+            border-top-right-radius: 50px;
+        }
+
+        .chat-input .user-input {
+            width: 100%;
+            font-size: 80%;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            padding: 8px;
+			float: left;
+        }
+
+        .button {
+            background-color: #DB5639; /* Green */
+            width: 100%;
+            border: none;
+            color: #f4faec;
+            padding: 10px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 150%;
+            cursor: pointer;
+            border-radius: 20px;
+        }
+    </style>
+    <script>
+        window.console = window.console || function (t) {
+        };
+    </script>
+    <script>
+        if (document.location.search.match(/type=embed/gi)) {
+            window.parent.postMessage("resize", "*");
+        }
+    </script>
 </head>
 <body translate="no">
 
 
-
 <div class="chat-input">
-	<form action="#0" id="user-input-form">
-		<label>Search for images:</label>
-		<input type="text" id="user-input" class="user-input" placeholder="Type Here!!">
-	</form>
-	<button class="button" type="submit" form="user-input-form" value="submit"><img src = "logo.png" height="40" alt = "Send"/>
-	</button>
+    <label>Search for images:</label>
+    <div style="display:flex; flex-direction: row; justify-content: center; align-items: center">
+        <input type="text" id="user-input" class="user-input" placeholder="Type Here!!" />
+        <p>
+            <img id="audio-control" class="white-circle" src="logo.png">
+            <canvas class="visualizer"></canvas>
+        </p>
+    </div>
+    <button id="text-submit" class="button" type="submit" value="submit">Enter</button>
+
+    <div style="display:flex; flex-direction: row; align-items: left">
+	<p><span id="message"></span></p>
+    &nbsp;
+    <p>
+        <input type="password" id="ACCESS_ID" name="ACCESS ID" placeholder="ACCESS ID" value=""/>
+    </p>
+    <p>
+        <input type="password" id="SECRET_KEY" name="SECRET KEY" placeholder="SECRET KEY" value=""/>
+    </p>
+    </div>
 </div>
 
-<div class="chat-input">
-	<form >
-		<label for="img">Uplaod image:</label>
-		<input type="file" id="img" name="img" accept="image/*">
-		<button class="button" type="submit" form="user-input-form" value="submit"><img src = "upload.png" height="40" alt = "Send"/>
-</form>
+<div class="chat-output" id="chat-output">
+    <div style="display:flex; flex-direction: row; align-items: center">
+        <label for="img">Upload image:</label>
+        <input type="file" id="img" name="img" accept="image/*">
+        <button
+            class="button" type="submit" value="submit"><img src="upload.png" height="40" alt="Send"/>
+    	</button>
+	</div>
 </div>
 
 
 <script src="https://static.codepen.io/assets/common/stopExecutionOnTimeout-db44b196776521ea816683afab021f757616c80860d31da6232dedb8d7cc4862.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.48.0.min.js"></script>
+<script src="lex_audio/dist/aws-lex-audio.js" type="text/javascript"></script>
+<script src="lex_audio/example/renderer.js" type="text/javascript"></script>
+
 <script id="rendered-js">
-var outputArea = $("#chat-output");
+    var outputArea = $("#chat-output");
+    // var apigClient = apigClientFactory.newClient();
 
-var apigClient = apigClientFactory.newClient();
+    var waveform = window.Waveform();
+    var message = document.getElementById('message');
+    var config, conversation;
+    message.textContent = 'Passive';
 
-$("#user-input-form").on("submit", function (e) {
+    document.getElementById('audio-control').onclick = function () {
 
-  e.preventDefault();
+        AWS.config.credentials = new AWS.Credentials(document.getElementById('ACCESS_ID').value, document.getElementById('SECRET_KEY').value, null);
+        AWS.config.region = 'us-east-1';
 
-  var message = $("#user-input").val();
-  var params = {
-	};
-  var additionalParams = {
-	};
-  var body = {
-		"message" : $("#user-input").val()
-	};
-  outputArea.append(`
-    <div class='bot-message'>
-      <div class='message'>
-        ${body["message"]}
-      </div>
-    </div>
-  `);
-  
-  $("#user-input").val("");
-  
-  apigClient.chatbotPost(params, body, additionalParams)
-    .then( function(result){
-	var body2 = JSON.parse(result.data.body)
-	outputArea.append(`
-      <div class='user-message'>
-        <div class='message'>
-        </div>
-      </div>
-    `);
-	
-    }).catch( function(result){
-  setTimeout(function () {
-    outputArea.append(`
-      <div class='user-message'>
-        <div class='message'>
-          Sorry, my AI isn't quite capable to understand that yet.
-        </div>
-      </div>
-    `);
-  }, 250)
-    });
-	
-	
-  
-	
-  $("#user-input").val("");
+        config = {
+            lexConfig: { botName: 'SearchPhotos'}
+        };
 
-});
-//# sourceURL=pen.js
+        conversation = new LexAudio.conversation(config, function (state) {
+            message.textContent = state + '...';
+            if (state === 'Listening') {
+                waveform.prepCanvas();
+            }
+            if (state === 'Sending') {
+                waveform.clearCanvas();
+            }
+        }, function (data) {
+			$("#user-input").val( data.inputTranscript )
+            console.log('Transcript: ', data.inputTranscript, ", Response: ", data.message);
+			// Call Elastic Search here with data.message items
+        }, function (error) {
+            message.textContent = error;
+        }, function (timeDomain, bufferLength) {
+            waveform.visualizeAudioBuffer(timeDomain, bufferLength);
+        });
+        conversation.advanceConversation();
+    };
 
-window.setInterval(function() {
-  var elem = document.getElementById('chat-output');
-  elem.scrollTop = elem.scrollHeight;
-}, 10);
-    </script>
+    document.getElementById('text-submit').onclick = function () {
+
+        var message = $("#user-input").val();
+        var params = {};
+        var additionalParams = {};
+        var body = {
+            "message": $("#user-input").val()
+        };
+        outputArea.append(`
+            <div class='message'>Boom</div>
+         `);
+
+        $("#user-input").val("");
+
+        // Use this function to talk to lex and get result
+        apigClient.chatbotPost(params, body, additionalParams)
+            .then(function (result) {
+                var body2 = JSON.parse(result.data.body)
+                outputArea.append(``);
+
+            }).catch(function (result) {
+            setTimeout(function () {
+                outputArea.append(`
+                  <div class='message'>
+                      Sorry, my AI isn't quite capable to understand that yet.
+                    </div>
+                `);
+            }, 250)
+        });
 
 
-</body></html>
+        $("#user-input").val("");
+
+    };
+    //# sourceURL=pen.js
+
+    // window.setInterval(function () {
+    //     var elem = document.getElementById('chat-output');
+    //     elem.scrollTop = elem.scrollHeight;
+    // }, 10);
+</script>
+
+
+</body>
+</html>
