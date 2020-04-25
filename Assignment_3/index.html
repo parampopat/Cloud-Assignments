@@ -206,7 +206,7 @@
         }, function (data) {
             $("#user-input").val(data.inputTranscript)
 
-            elastic_params['body'] = data.message
+            elastic_params['body'] = JSON.parse(data.message)
             console.log('Transcript: ', data.inputTranscript, ", Response: ", data.message);
             // Call Elastic Search here with data.message items
             apigClient.searchPost(params, elastic_params, additionalParams)

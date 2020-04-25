@@ -54,7 +54,7 @@ def lambda_handler(event, context):
     photo_list = []
 
     for thing in things:
-        query = es_url + '?q=labels:' + thing
+        query = "{}?q=labels:*{}*".format(es_url, thing)
         print(query)
         res = requests.get(query).json()['hits']['hits']
         print(res)
