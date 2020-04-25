@@ -213,12 +213,7 @@
                 .then(function (result) {
                     var objects = result.data.body
                     outputArea.append(`<div>` + objects + `</div>`);
-                }).catch(function (result) {
-                setTimeout(function () {
-                    outputArea.append(`<div class='message'>` + JSON.stringify(result) + `</div>`
-                    );
-                }, 5000)
-        });
+                })
         }, function (error) {
             message.textContent = error;
         }, function (timeDomain, bufferLength) {
