@@ -216,7 +216,12 @@
             apigClient.searchPost(params, elastic_params, additionalParams)
                 .then(function (result) {
                     var objects = result.data.body
-                    outputArea.append(`<div>` + objects + `</div>`);
+					var i;
+					var text ="";
+					for (i = 0; i < objects.length; i++) {
+						text += `<img src=` + objects[i] + `>`;
+					}
+                    outputArea.append(`<div>` + text + `</div>`);
                 })
         }, function (error) {
             message.textContent = error;
