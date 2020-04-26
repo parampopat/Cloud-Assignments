@@ -1,11 +1,18 @@
 """
-This is called search_photo on AWS... Ignore the naming convention
+Created from the 'BookTrip' Template.
+This function is used as a fulfillment code hook for the Restaurant Suggestion
+Lex Bot.
+For instructions on how to set up and test this bot, as well as additional samples,
+visit the Lex Getting Started documentation http://docs.aws.amazon.com/lex/latest/dg/getting-started.html.
 """
 
 import json
+import datetime
 import time
 import os
+import dateutil.parser
 import logging
+import boto3
 import spacy
 
 # import en_core_web_sm
@@ -98,7 +105,7 @@ def msg_create(msg):
 def extract_objects(
         text,
         stop_nouns=['photo', 'pic', 'picture', 'image', 'gallery'],
-        verbose=False, start=""
+        verbose=False, start="find photos of ",
 ):
     nlp = spacy.load('/opt/en_core_web_sm/')
     nlp.add_pipe(nlp.create_pipe('merge_noun_chunks'))
@@ -123,6 +130,8 @@ def search_photo(intent_request):
     1) Use of elicitSlot in slot validation and re-prompting
     2) Use of sessionAttributes to pass information that can be used to guide conversation
     """
+    slots = intent_request['currentIntent']['slots']
+    intent_name = intent_request['currentIntent']['name']
     session_attributes = intent_request['sessionAttributes'] if intent_request['sessionAttributes'] is not None else {}
     text = intent_request['inputTranscript']
 
@@ -153,7 +162,7 @@ def dispatch(intent_request):
     intent_name = intent_request['currentIntent']['name']
 
     # Dispatch to your bot's intent handlers
-    if intent_name == 'SearchPic':  # Actually does nothing
+    if intent_name in ['SearchPic', 'CatchAll']:  # Actually does nothing
         return search_photo(intent_request)
     else:
         raise Exception('Intent with name ' + intent_name + ' not supported')
