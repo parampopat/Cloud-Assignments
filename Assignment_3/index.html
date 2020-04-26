@@ -5,7 +5,7 @@
     <meta name="apple-mobile-web-app-title" content="CodePen">
     <link rel="shortcut icon" type="image/x-icon" href="https://kbppassignment1.s3.us-east-1.amazonaws.com/logo.png">
     <link rel="mask-icon" type="" href="https://kbppassignment1.s3.us-east-1.amazonaws.com/logo.png" color="#111">
-    <title>CodePen - Bot UI</title>
+    <title>AI Photos</title>
     <link rel="stylesheet" href="lex_audio/example/style.css">
     <!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">-->
     <style>
@@ -45,6 +45,8 @@
             background: #f4faec;
             border-top-left-radius: 50px;
             border-top-right-radius: 50px;
+			border-bottom-left-radius: 50px;
+            border-bottom-right-radius: 50px;
             overflow-y: auto;
             -webkit-box-orient: vertical;
             -webkit-box-direction: normal;
@@ -98,7 +100,7 @@
             width: 100%;
             border: none;
             color: #f4faec;
-            padding: 10px;
+            padding: 2px;
             text-align: center;
             text-decoration: none;
             display: inline-block;
@@ -244,7 +246,12 @@
                 apigClient.searchPost(params, elastic_params, additionalParams)
                     .then(function (result) {
                         var objects = result.data.body
-                        outputArea.append(`<div>` + objects + `</div>`);
+						var i;
+						var text ="";
+						for (i = 0; i < objects.length; i++) {
+							text += `<img src=` + objects[i] + `><br>`;
+						}
+                        outputArea.append(`<div>` + text + `</div>`);
                     }).catch(function (result) {
                     setTimeout(function () {
                         outputArea.append(`<div class='message'>` + JSON.stringify(result) + `</div>`
