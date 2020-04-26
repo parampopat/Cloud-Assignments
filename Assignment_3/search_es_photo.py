@@ -67,5 +67,5 @@ def lambda_handler(event, context):
     url_list = list(set(url_list))
     return {
         'statusCode': 200,
-        'body': [photo_list, url_list]
+        'body': url_list
     }
