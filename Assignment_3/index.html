@@ -242,7 +242,7 @@
 					var i;
 					var text ="";
 					for (i = 0; i < objects.length; i++) {
-						text += `<img src=` + objects[i] + `>`;
+						text += `<img src=` + objects[i] + ` height="200" width="200" >`;
 					}
 					document.getElementById('img-output').innerHTML =  `<div>` + text + `</div>`;
                 })
@@ -279,7 +279,7 @@
 						var i;
 						var text ="";
 						for (i = 0; i < objects.length; i++) {
-							text += `<img src=` + objects[i] + `>`;
+							text += `<img src=` + objects[i] + ` height="200" width="200" >`;
 						}
 		                document.getElementById('img-output').innerHTML =  `<div>` + text + `</div>`;
                     }).catch(function (result) {
