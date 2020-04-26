@@ -4,7 +4,7 @@
     <link rel="apple-touch-icon" type="image/png" href="https://kbppassignment1.s3.us-east-1.amazonaws.com/logo.png">
     <meta name="apple-mobile-web-app-title" content="CodePen">
     <link rel="shortcut icon" type="image/x-icon" href="https://kbppassignment1.s3.us-east-1.amazonaws.com/logo.png">
-    <link rel="mask-icon" type="" href="https://kbppassignment1.s3.us-east-1.amazonaws.com/logo.png" color="#111">
+    <link rel="mask-icon" type="" href="https://ppkbfrontend.s3.us-east-1.amazonaws.com/logo.png" color="#111">
     <title>AI Photos</title>
     <link rel="stylesheet" href="lex_audio/example/style.css">
     <!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">-->
@@ -142,7 +142,7 @@
             <canvas class="visualizer"></canvas>
         </p>
     </div>
-    <button id="text-submit" class="button" type="submit" value="submit">Enter</button>
+    <button id="text-submit" class="button" type="submit" value="submit">Search</button>
     <div style="display:flex; flex-direction: row; align-items: left">
         <p><span id="message"></span></p>
         &nbsp;
@@ -158,12 +158,13 @@
 <div class="chat-input" id="chat-output">
     <div style="display:flex; flex-direction: row; align-items: center">
         <label for="img">Upload image:</label>
-        <input type="file" id="img" name="img" accept="image/*">
-        <button
-                class="button" type="submit" value="submit"><img src="upload.png" height="40" alt="Send"/>
-        </button>
+		<input id="inputFileToLoad" type="file" accept="image/*" onchange="encodeImageFileAsURL();" />
+		<button id="img-submit" class="button" type="submit" value="submit">Upload</button>
     </div>
+	
 </div>
+
+<div id = "imgTest"></div>
 
 <div class="chat-output" id="img-output"></div>
 
@@ -182,6 +183,29 @@
     var waveform = window.Waveform();
     var message = document.getElementById('message');
     var config, conversation;
+	var image_encoded;
+	
+	function encodeImageFileAsURL() {
+
+		var filesSelected = document.getElementById("inputFileToLoad").files;
+		if (filesSelected.length > 0) {
+		  var fileToLoad = filesSelected[0];
+
+		  var fileReader = new FileReader();
+
+		  fileReader.onload = function(fileLoadedEvent) {
+			var srcData = fileLoadedEvent.target.result; // <--- data: base64
+
+			var newImage = document.createElement('img');
+			newImage.src = srcData;
+
+			document.getElementById("imgTest").innerHTML = newImage.outerHTML;
+			image_encoded = srcData
+		  }
+		  fileReader.readAsDataURL(fileToLoad);
+		}
+	}
+	
 
     message.textContent = 'Passive';
 
@@ -276,7 +300,30 @@
 
         $("#user-input").val("");
 
-    };
+	};
+	
+  
+  
+	document.getElementById('img-submit').onclick = function () {
+		var elastic_params = {'body': ""};
+		var body = {
+            "body": image_encoded
+        };
+		console.log(body)
+        var params = {};
+        var additionalParams = {};
+		
+		apigClient.uploadPut(params, body, additionalParams)
+            .then(function (result) {
+				document.getElementById('imgTest').innerHTML =  `<div></div>`;
+				document.getElementById('img-output').innerHTML =  `<div></div>`;
+            }).catch(function (result) {
+            setTimeout(function () {
+                outputArea.append(`<div class='message'>` + result.toString() + `</div>`
+                );
+            }, 5000)
+        });
+	};
     //# sourceURL=pen.js
 
     // window.setInterval(function () {
