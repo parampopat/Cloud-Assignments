@@ -25,6 +25,7 @@ def upload_file(file_name, bucket, object_name=None):
     except ClientError as e:
         return False
     return True
+<<<<<<< HEAD
     
     
 def generate_name(len=7):
@@ -32,6 +33,15 @@ def generate_name(len=7):
     return name
 	
     
+=======
+
+
+def generate_name(len=7):
+    name = ''.join(sample("abcdefghijklmnopqrstuvxyz1234567890", len)) + '.jpg'
+    return name
+
+
+>>>>>>> 63d8d4c7379b1fb2559dc120630e3fbc3c4c17a0
 def lambda_handler(event, context):
     with open("/tmp/image.jpg", "wb") as new_file:
         new_file.write(base64.b64decode(event['body'].split(',')[1]))
