@@ -1,0 +1,10 @@
+version: 0.1
+phases:
+  install:
+    commands:
+      - aws cloudformation package --template-file appSamTemplate.yaml --s3-bucket voicephotosearch --output-template-file appSamTemplateOut.yaml
+artifacts:
+  type: zip
+  files:
+    - appSamTemplate.yaml
+    - appSamTemplateOut.yaml

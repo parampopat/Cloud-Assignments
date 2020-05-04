@@ -1,0 +1,144 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: An AWS Serverless Specification template describing your function.
+
+Resources:
+  lexdisambiguate:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: lex_disambiguate.lambda_handler
+      Runtime: python3.7
+      CodeUri: ./
+      Description: ''
+      MemorySize: 512
+      Timeout: 20
+      Policies:
+        - 'AmazonLexFullAccess'
+        - 'AWSLambdaBasicExecutionRole'
+      Layers:
+        - 'arn:aws:lambda:us-east-1:113088814899:layer:Klayers-python37-spacy:26'
+        - 'arn:aws:lambda:us-east-1:041132386971:layer:en_core_web_smv2:1'
+
+  uploadphoto:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: upload_photo.lambda_handler
+      Runtime: python3.7
+      CodeUri: ./
+      Description: ''
+      MemorySize: 128
+      Timeout: 3
+      Policies:
+        - 'AmazonS3FullAccess'
+        - 'AWSLambdaBasicExecutionRole'
+      Events:
+        uploadphoto:
+          Type: Api
+          Properties:
+            Path: /upload
+            Method: PUT
+
+  itemizesentence:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: itemize_sentence.lambda_handler
+      Runtime: python3.7
+      CodeUri: ./
+      Description: ''
+      MemorySize: 128
+      Timeout: 20
+      Policies:
+        - 'AmazonLexFullAccess'
+        - 'AWSLambdaBasicExecutionRole'
+      Events:
+        lexpost:
+          Type: Api
+          Properties:
+            Path: /lex
+            Method: POST
+
+  ppkbphotosauto:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: ppkbphotos-auto
+
+  indexphotos:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index_photos.lambda_handler
+      Runtime: python3.6
+      CodeUri: ./
+      Description: ''
+      MemorySize: 256
+      Timeout: 5
+      Policies:
+        - 'AmazonS3FullAccess'
+        - 'AmazonRekognitionFullAccess'
+        - 'AdministratorAccess'
+        - 'AWSLambdaExecute'
+        - 'AWSLambdaVPCAccessExecutionRole'
+        - 'AWSLambdaBasicExecutionRole'
+      Events:
+        BucketEvent1:
+          Type: S3
+          Properties:
+            Bucket:
+              Ref: ppkbphotosauto
+            Events:
+              - 's3:ObjectCreated:Put'
+      VpcConfig:
+        SecurityGroupIds:
+          - sg-0806d05a
+        SubnetIds:
+          - subnet-27787d40
+          - subnet-2433e669
+
+  searchesphoto:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.7
+      CodeUri: ./
+      Description: ''
+      MemorySize: 128
+      Timeout: 3
+      Policies:
+        - 'AWSLambdaBasicExecutionRole'
+      Events:
+        search:
+          Type: Api
+          Properties:
+            Path: /search
+            Method: POST
+
+      VpcConfig:
+        SecurityGroupIds:
+          - sg-0806d05a
+        SubnetIds:
+          - subnet-27787d40
+          - subnet-2433e669
+
+  PhotoIndexAuto:
+    Type: AWS::Elasticsearch::Domain
+    Properties:
+      DomainName: "photo-index-auto"
+      ElasticsearchClusterConfig:
+        InstanceCount: "1"
+        InstanceType: "t2.small.elasticsearch"
+      ElasticsearchVersion: "7.4"
+      EBSOptions:
+        EBSEnabled: true
+        Iops: 0
+        VolumeSize: 10
+        VolumeType: "gp2"
+      SnapshotOptions:
+        AutomatedSnapshotStartHour: "0"
+      AccessPolicies:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              AWS: "*"
+            Action: "es:*"
+            Resource: "arn:aws:es:us-east-1:04113238697:domain/photo-index-auto/*"
